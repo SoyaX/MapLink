@@ -1,8 +1,6 @@
 ﻿using System.Numerics;
 using Dalamud.Interface;
-using Dalamud.Interface.Components;
 using Dalamud.Interface.Windowing;
-using Dalamud.Utility;
 using ImGuiNET;
 
 namespace MapLink; 
@@ -18,8 +16,6 @@ public class MainWindow : Window {
     public override void PostDraw() {
         ImGui.PopStyleVar();
     }
-
-    private string[] HiddenNames = new[] { "Member One", "Member Two", "Member Three", "Member Four", "Member Five", "Member Six", "Member Seven", "Member Eight" };
     
     public override void Draw() {
 
@@ -30,12 +26,6 @@ public class MainWindow : Window {
             ImGui.TableSetupColumn("##Links", ImGuiTableColumnFlags.WidthFixed, 24 * ImGuiHelpers.GlobalScale);
             
             ImGui.TableHeadersRow();
-
-
-            var i = 0;
-            
-            
-            
             
             foreach (var character in PartyList) {
                 // Character Name
@@ -43,13 +33,11 @@ public class MainWindow : Window {
                 ImGui.Dummy(ImGuiHelpers.ScaledVector2(1, 24));
                 ImGui.SameLine();
                 
-                
-                ImGui.Text(HiddenNames[i++ % HiddenNames.Length]);
+                ImGui.Text(character.Name.TextValue);
                 
                 if (!Api.TryGetMapSpotByContentId(character.ContentId, out var spot) || spot == null) {
                     ImGui.TableNextColumn();
                     ImGui.TextDisabled("Not Reported");
-                    
                     
                     ImGui.TableNextRow();
                     continue;
@@ -78,16 +66,9 @@ public class MainWindow : Window {
                 var clicked = ImGui.Button($"{(char)FontAwesomeIcon.MapPin}##{character.ContentId:X16}", ImGuiHelpers.ScaledVector2(24));
                 ImGui.PopFont();
                 if (clicked) GameGui.OpenMapWithMapLink(link);
-
-
-
             }
-            
-            
             
             ImGui.EndTable();
         }
-        
-        
     }
 }
