@@ -1,0 +1,9 @@
+{
+  "Author": "SoyaX",
+  "Name": "Map Link",
+  "RepoUrl": "https://github.com/SoyaX/MapLinkPlugin",
+  "Punchline": "Simplified Map Tracking",
+  "Description": "Automatic map tracking for parties.",
+  "InternalName": "MapLinkPlugin",
+  "ApplicableVersion": "any"
+}
