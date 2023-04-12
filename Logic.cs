@@ -2,7 +2,7 @@
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Lumina.Excel.GeneratedSheets;
 
-namespace MapLink; 
+namespace MapMate; 
 
 public static class Logic {
     public static bool TryGetCurrentTreasureSpot([NotNullWhen(true)] out TreasureSpot? spot) {

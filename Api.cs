@@ -10,13 +10,14 @@ using Dalamud.Logging;
 using Lumina.Excel.GeneratedSheets;
 using Newtonsoft.Json;
 
-namespace MapLink; 
+namespace MapMate; 
 
 public static class Api {
 
     private static string updateKey = string.Empty;
+    private static string activeHash = string.Empty;
 
-    private const string ApiBaseUrl = "https://maplink.soyax.app";
+    private const string ApiBaseUrl = "https://mapmate.soyax.app";
     
     public static Stopwatch LastReported { get; } = Stopwatch.StartNew();
     public static bool RequestUpdate { get; set; } = true;
@@ -25,7 +26,15 @@ public static class Api {
     
     
     public static void UpdateOwnMap() {
+        var localHash = GetHashedContentId(ClientState.LocalContentId);
+        if (activeHash != localHash && !string.IsNullOrEmpty(updateKey)) {
+            Delete(activeHash, updateKey);
+            RequestUpdate = true;
+            return;
+        }
+
         if (ClientState.LocalContentId == 0) return;
+        if (PartyList.PartyId == 0) return;
         Logic.TryGetCurrentTreasureSpot(out var map);
         
         if (string.IsNullOrEmpty(updateKey)) {
@@ -43,6 +52,7 @@ public static class Api {
 
     public static void UpdateParty() {
         if (ClientState.LocalContentId == 0) return;
+        if (PartyList.PartyId == 0) return;
         var partyMemberIds = PartyList.Where(p => p.ContentId != (long)ClientState.LocalContentId).Select(p => (ulong)p.ContentId).ToArray();
         if (partyMemberIds.Length < 1) {
             PartyMaps.Clear();
@@ -53,6 +63,7 @@ public static class Api {
 
     public static void Delete() {
         if (ClientState.LocalContentId == 0) return;
+        if (PartyList.PartyId == 0) return;
         if (string.IsNullOrEmpty(updateKey)) return;
         LastReportedMap = null;
         Delete(ClientState.LocalContentId, updateKey);
@@ -64,12 +75,15 @@ public static class Api {
         try {
             using var client = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
             LastReportedMap = (row, subRow);
-            var response = await client.PutAsync($"{ApiBaseUrl}/{GetHashedContentId(contentId)}/{row}/{subRow}", null);
+            var hash = GetHashedContentId(contentId);
+            var response = await client.PutAsync($"{ApiBaseUrl}/{hash}/{row}/{subRow}", null);
             if (response.StatusCode == HttpStatusCode.OK) {
                 var responseText = await response.Content.ReadAsStringAsync();
                 var responseObject = JsonConvert.DeserializeObject<ApiResponse.PutResponse>(responseText);
                 if (responseObject != null) {
                     updateKey = responseObject.Key;
+                    activeHash = hash;
+                    RequestUpdate = true;
                 }
             } else {
                 LastReportedMap = null;
@@ -129,24 +143,42 @@ public static class Api {
             LastReportedMap = null;
             await client.DeleteAsync($"{ApiBaseUrl}/{GetHashedContentId(contentId)}/{key}");
             updateKey = string.Empty;
+            activeHash = string.Empty;
         } catch (Exception ex) {
             PluginLog.Error(ex, "Exception in API.Delete");
         }
-        
+    }
+    
+    private static async void Delete(string hash, string key) {
+        try {
+            using var client = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) };
+            LastReportedMap = null;
+            await client.DeleteAsync($"{ApiBaseUrl}/{hash}/{key}");
+            updateKey = string.Empty;
+            activeHash = string.Empty;
+        } catch (Exception ex) {
+            PluginLog.Error(ex, "Exception in API.Delete");
+        }
     }
     
     private static readonly Dictionary<ulong, string> hashedContentIds = new();
-
+    private static long _hashPartyId;
 
     internal static string GetHashedContentId(long contentId) => GetHashedContentId((ulong)contentId);
     internal static string GetHashedContentId(ulong contentId) {
         if (contentId == 0) return string.Empty;
+        if (_hashPartyId != PartyList.PartyId) {
+            _hashPartyId = PartyList.PartyId;
+            hashedContentIds.Clear();
+        }
+        
         if (hashedContentIds.TryGetValue(contentId, out var hash)) return hash;
-        var md5 = MD5.HashData(Encoding.UTF8.GetBytes($"MapLink__{contentId:X16}"));
+        var md5 = MD5.HashData(Encoding.UTF8.GetBytes($"MapMate_{PartyList.PartyId:X16}_{contentId:X16}"));
         var str = BitConverter.ToString(md5.ToArray()).Replace("-", "");
         hashedContentIds.Add(contentId, str);
         return str;
     }
+
 
     public static bool TryGetMapSpotByContentId(long characterContentId, out TreasureSpot? spot) {
         if (characterContentId == (long)ClientState.LocalContentId) return Logic.TryGetCurrentTreasureSpot(out spot);

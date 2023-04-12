@@ -1,11 +1,12 @@
 ﻿using System.Numerics;
 using Dalamud.Interface.Windowing;
+using FFXIVClientStructs.FFXIV.Client.Game.Group;
 using ImGuiNET;
 
-namespace MapLink; 
+namespace MapMate; 
 
 public unsafe class DebugWindow : Window {
-    public DebugWindow() : base(nameof(MapLink) + " - DEBUG") {
+    public DebugWindow() : base(nameof(MapMate) + " - DEBUG") {
         this.SizeConstraints = new WindowSizeConstraints() { MinimumSize = new Vector2(200, 400), MaximumSize = new Vector2(float.MaxValue) };
     }
     
@@ -38,6 +39,12 @@ public unsafe class DebugWindow : Window {
         ImGui.Separator();
         ImGui.Text("Party:");
 
+        var groupManager = GroupManager.Instance();
+        if (groupManager != null) {
+            ImGui.Text($"Party ID: {groupManager->PartyId} : {groupManager->PartyId_2}");
+        }
+        
+        
         ImGui.SameLine();
         if (ImGui.SmallButton("Force Refresh")) {
             Api.UpdateParty();

@@ -1,4 +1,4 @@
-﻿namespace MapLink; 
+﻿namespace MapMate; 
 
 public class ApiResponse {
 

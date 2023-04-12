@@ -1,4 +1,4 @@
-﻿global using static MapLink.Plugin;
+﻿global using static MapMate.Plugin;
 using System.Diagnostics;
 using Dalamud.Data;
 using Dalamud.Game;
@@ -12,11 +12,10 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using Condition = Dalamud.Game.ClientState.Conditions.Condition;
 
-namespace MapLink;
+namespace MapMate;
 
 public class Plugin : IDalamudPlugin {
-    public string Name => "Map Link";
-
+    public string Name => "Map Mate";
     
     [PluginService] internal static DalamudPluginInterface PluginInterface { get; private set; } = null!;
     [PluginService] internal static DataManager DataManager { get; private set; } = null!;
@@ -32,6 +31,9 @@ public class Plugin : IDalamudPlugin {
     internal static MainWindow MainWindow { get; } = new();
     
     private Stopwatch UpdateThrottle = Stopwatch.StartNew();
+
+    private long PartyId;
+    
     
     
     public Plugin() {
@@ -44,7 +46,9 @@ public class Plugin : IDalamudPlugin {
         Framework.Update += FrameworkUpdate;
         Condition.ConditionChange += ConditionOnConditionChange;
 
-        CommandManager.AddHandler("/maplink", new CommandInfo(CommandHandle));
+        CommandManager.AddHandler("/mapmate", new CommandInfo(CommandHandle));
+
+        PartyId = PartyList.PartyId;
     }
 
     private void CommandHandle(string command, string arguments) {
@@ -81,6 +85,13 @@ public class Plugin : IDalamudPlugin {
             return;
         }
 
+        if (PartyId != PartyList.PartyId) {
+            // Party Changed
+            Api.RequestUpdate = true;
+            PartyId = PartyList.PartyId;
+            return;
+        }
+        
         if (Logic.TryGetCurrentTreasureSpot(out var spot)) {
             if (Api.LastReportedMap != (spot.RowId, spot.SubRowId)) {
                 Api.RequestUpdate = true;
@@ -92,7 +103,7 @@ public class Plugin : IDalamudPlugin {
     }
     
     public void Dispose() {
-        CommandManager.RemoveHandler("/maplink");
+        CommandManager.RemoveHandler("/mapmate");
         Condition.ConditionChange -= ConditionOnConditionChange;
         Framework.Update -= FrameworkUpdate;
         WindowSystem.RemoveAllWindows();

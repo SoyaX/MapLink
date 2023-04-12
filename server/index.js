@@ -1,6 +1,3 @@
-const express = require("express");
-const app = express();
-
 class MapEntry {
     constructor(row, subrow) {
         this.MapRow = row;
@@ -20,7 +17,17 @@ const ErrorType = {
     InvalidRequest: "invalid request",
 }
 
-const Entries = {};
+const express = require("express");
+
+const app = express();
+
+app.listen(40001, "127.0.0.1", () => {
+    console.log("Server Started on Port 40001.");
+});
+
+const Entries = {
+
+};
 
 const IsValidContentId = (contentId) => /^[0-9A-F]{32}$/g.test(contentId);
 
@@ -56,7 +63,7 @@ const ValidMap = (row, subrow) => {
 
 
 const Error = (res, code, type) => {
-    console.log(`Send Error: ${type}`);
+    // console.log(`Send Error: ${type}`);
     res.statusCode = code;
     res.send({error: type ?? true});
 }
@@ -115,12 +122,10 @@ app.delete("/:contentId/:key", (req, res) => {
 });
 
 app.use("*", (req, res) => {
+    console.log(`Invalid Request: ${req.originalUrl}`);
     return Error(res, 400, ErrorType.InvalidRequest);
 });
 
-app.listen(40001, "127.0.0.1", () => {
-    console.log("Server Started on Port 40001.");
-});
 
 setInterval(() => {
     var timeNow = Date.now();

@@ -1,9 +1,9 @@
 {
   "Author": "SoyaX",
-  "Name": "Map Link",
-  "RepoUrl": "https://github.com/SoyaX/MapLinkPlugin",
+  "Name": "Map Mate",
+  "RepoUrl": "https://github.com/SoyaX/MapMatePlugin",
   "Punchline": "Simplified Map Tracking",
   "Description": "Automatic map tracking for parties.",
-  "InternalName": "MapLink",
+  "InternalName": "MapMate",
   "ApplicableVersion": "any"
 }

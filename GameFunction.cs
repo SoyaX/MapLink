@@ -1,6 +1,6 @@
 ﻿using Dalamud.Utility.Signatures;
 
-namespace MapLink; 
+namespace MapMate; 
 
 public class GameFunction {
 
